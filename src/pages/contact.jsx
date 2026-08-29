@@ -22,29 +22,89 @@ function Contact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleChange = (e) => {
-    let { name, value } = e.target;
+    const { name, value: inputValue } = e.target;
+    let value = inputValue;
+    let errorMsg = "";
 
     if (name === "fullName" || name === "subject") {
-      value = value.replace(/\d/g, "");
-      if (value.length > 30) return;
+      if (/[0-9]/.test(value)) {
+        errorMsg =
+          name === "fullName"
+            ? "Numbers are not allowed in the full name."
+            : "Numbers are not allowed in the subject.";
+
+        value = value.replace(/[0-9]/g, "");
+      }
+
+      value = value.slice(0, 20);
+
+      if (!errorMsg) {
+        errorMsg = validateField(name, value);
+      }
+    } else if (name === "phone") {
+      value = value.replace(/[^\d+\-\s()]/g, "");
+      value = value.slice(0, 20);
+      errorMsg = validateField(name, value);
+    } else if (name === "message") {
+      value = value.slice(0, 500);
+      errorMsg = validateField(name, value);
+    } else {
+      errorMsg = validateField(name, value);
     }
 
-    if (name === "phone") {
-      value = value.replace(/[^\d+]/g, "");
-      if (value.length > 12) return;
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setTouched((prev) => ({ ...prev, [name]: true }));
+    setTouched((prev) => ({
+      ...prev,
+      [name]: true,
+    }));
 
-    const errorMsg = validateField(name, value);
-    setErrors((prev) => ({ ...prev, [name]: errorMsg }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: errorMsg,
+    }));
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    setTouched((prev) => ({ ...prev, [name]: true }));
-    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+
+    setTouched((prev) => ({
+      ...prev,
+      [name]: true,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validateField(name, value),
+    }));
+  };
+
+  const handlePaste = (e) => {
+    const { name } = e.target;
+
+    if (name === "fullName" || name === "subject") {
+      const pastedText = e.clipboardData.getData("text");
+
+      if (/[0-9]/.test(pastedText)) {
+        e.preventDefault();
+
+        setTouched((prev) => ({
+          ...prev,
+          [name]: true,
+        }));
+
+        setErrors((prev) => ({
+          ...prev,
+          [name]:
+            name === "fullName"
+              ? "Numbers are not allowed in the full name."
+              : "Numbers are not allowed in the subject.",
+        }));
+      }
+    }
   };
 
   const handleSubmit = (e) => {
@@ -59,6 +119,7 @@ function Contact() {
     };
 
     setErrors(nextErrors);
+
     setTouched({
       fullName: true,
       email: true,
@@ -72,6 +133,7 @@ function Contact() {
     }
 
     setIsSubmitted(true);
+
     setFormData({
       fullName: "",
       email: "",
@@ -79,6 +141,7 @@ function Contact() {
       subject: "",
       message: "",
     });
+
     setErrors({
       fullName: "",
       email: "",
@@ -86,6 +149,7 @@ function Contact() {
       subject: "",
       message: "",
     });
+
     setTouched({});
   };
 
@@ -95,13 +159,16 @@ function Contact() {
     <section className="split-hero contact-page">
       <div className="hero-text-side">
         <p className="eyebrow accent">Contact us</p>
+
         <h2>
           Get in <span>touch</span> with our team
         </h2>
+
         <div className="yellow-line"></div>
+
         <p>
-          Have questions or want to start a project? Send us a message and our team will get
-          back to you within 24 hours.
+          Have questions or want to start a project? Send us a message and
+          our team will get back to you within 24 hours.
         </p>
 
         <div className="quick-contact-info">
@@ -109,6 +176,7 @@ function Contact() {
             <strong>Email Us</strong>
             <p>support@ethera-studio.co.ls</p>
           </div>
+
           <div className="info-item">
             <strong>Location</strong>
             <p>Maseru, Lesotho</p>
@@ -120,8 +188,16 @@ function Contact() {
         {isSubmitted ? (
           <div className="success-message">
             <h3>Message Sent!</h3>
-            <p>Thank you for reaching out. We will get back to you within 24 hours.</p>
-            <button className="submit-btn" onClick={() => setIsSubmitted(false)}>
+
+            <p>
+              Thank you for reaching out. We will get back to you within
+              24 hours.
+            </p>
+
+            <button
+              className="submit-btn"
+              onClick={() => setIsSubmitted(false)}
+            >
               Send Another Message
             </button>
           </div>
@@ -132,6 +208,7 @@ function Contact() {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="fullName">Full Name</label>
+
                 <input
                   type="text"
                   id="fullName"
@@ -139,8 +216,11 @@ function Contact() {
                   value={formData.fullName}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onPaste={handlePaste}
+                  maxLength={20}
                   placeholder="Enter your full name"
                 />
+
                 {touched.fullName && errors.fullName && (
                   <span className="error-text">{errors.fullName}</span>
                 )}
@@ -148,6 +228,7 @@ function Contact() {
 
               <div className="form-group">
                 <label htmlFor="email">Email Address</label>
+
                 <input
                   type="email"
                   id="email"
@@ -157,6 +238,7 @@ function Contact() {
                   onBlur={handleBlur}
                   placeholder="Enter your email address"
                 />
+
                 {touched.email && errors.email && (
                   <span className="error-text">{errors.email}</span>
                 )}
@@ -166,6 +248,7 @@ function Contact() {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="phone">Phone Number</label>
+
                 <input
                   type="tel"
                   id="phone"
@@ -173,8 +256,10 @@ function Contact() {
                   value={formData.phone}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  maxLength={20}
                   placeholder="Enter your phone number"
                 />
+
                 {touched.phone && errors.phone && (
                   <span className="error-text">{errors.phone}</span>
                 )}
@@ -182,6 +267,7 @@ function Contact() {
 
               <div className="form-group">
                 <label htmlFor="subject">Subject</label>
+
                 <input
                   type="text"
                   id="subject"
@@ -189,8 +275,11 @@ function Contact() {
                   value={formData.subject}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onPaste={handlePaste}
+                  maxLength={20}
                   placeholder="Enter subject"
                 />
+
                 {touched.subject && errors.subject && (
                   <span className="error-text">{errors.subject}</span>
                 )}
@@ -199,6 +288,7 @@ function Contact() {
 
             <div className="form-group">
               <label htmlFor="message">Message</label>
+
               <textarea
                 id="message"
                 name="message"
@@ -206,14 +296,20 @@ function Contact() {
                 value={formData.message}
                 onChange={handleChange}
                 onBlur={handleBlur}
+                maxLength={500}
                 placeholder="Enter your message"
               ></textarea>
+
               {touched.message && errors.message && (
                 <span className="error-text">{errors.message}</span>
               )}
             </div>
 
-            <button type="submit" className="submit-btn" disabled={!canSubmit}>
+            <button
+              type="submit"
+              className="submit-btn"
+              disabled={!canSubmit}
+            >
               Submit
             </button>
           </form>
