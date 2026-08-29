@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import ServiceCard from "../components/ServiceCard";
 
 const services = [
-
+  {
+    title: "Brand Strategy",
+    accent: "Strategy",
+    description:
+      "We map your business goals to a clear digital direction that turns attention into loyal customers.",
+    image:
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80",
+    href: "https://www.example.com/brand-strategy",
+  },
   {
     title: "Web Design",
     accent: "Design",
